@@ -14,7 +14,7 @@ class HVAC:
         self.idd = idd
         self.temp = random.randrange(-20,35)
         self.threshold = threshold
-        self.parents = list()
+        self.parents = set()
         self.flag = 0
         #self.run()
     
@@ -27,17 +27,16 @@ class HVAC:
             self.temp += random.randrange(-1,1)
             if self.flag == 0:
                 if self.temp >= self.threshold:
-                    # logic for update
+                    # logic for update with locking
                     self.flag = 1
             else:
                 if self.temp < self.threshold:
-                    # logic for update
+                    # logic for update with locking
                     self.flag = 0
         # this runs forever
         
     def addParent(self, parent):
-        self.parents.append(parent)
-        self.parents = list(set(self.parents))
+        self.parents.add(parent)
     
     def getID(self):
         return self.idd
@@ -46,39 +45,56 @@ class HVAC:
 class EdgeServer:
     def __init__(self, idd, childrenlist):
         self.idd = idd
-        self.parents = list()
-        self.children = list()
+        self.parents = set()
+        self.children = set()
+        self.listErrantNodes = set()
         for child in childrenlist:
             child.getID()
             self.addChild(child)
     
     def addParent(self, parent):
-        self.parents.append(parent)
-        self.parents = list(set(self.parents))
+        self.parents.add(parent)
     
     def addChild(self, child):
-        self.children.append(child)
-        self.children = list(set(self.children))
+        self.children.add(child)
         child.addParent(self)
     
     def getID(self):
         return self.idd
+    
+    def addErrant(self, node):
+        self.listErrantNodes.add(node)
+        for parent in self.parents:
+            # lock
+            parent.addErrant(node)
+
+    def removeErrant(self, node):
+        self.listErrantNodes.discard(node)
+        for parent in self.parents:
+            # lock
+            parent.removeErrant(node)
 
 
 class CentralHeatingSys:
     def __init__(self, idd, childrenlist):
         self.idd = idd
-        self.children = list()
+        self.children = set()
+        self.listErrantNodes = set()
         for child in childrenlist:
             self.addChild(child)
     
     def addChild(self, child):
-        self.children.append(child)
-        self.children = list(set(self.children))
+        self.children.add(child)
         child.addParent(self)
         
     def getID(self):
         return self.idd
+    
+    def addErrant(self, node):
+        self.listErrantNodes.add(node)
+    
+    def removeErrant(self, node):
+        self.listErrantNodes.discard(node)
 
 threshold = 100
 a = HVAC(1,100)
