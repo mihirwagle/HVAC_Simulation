@@ -25,7 +25,7 @@ class HVAC:
             self.flag = 1
         else:
             self.flag = 0
-        while True and time.time()< start + 100:
+        while True and time.time()< self.start + 100:
             time.sleep(0.1)
             self.temp += random.randrange(-1.0,1.0)
             if self.temp < 80 or self.temp > 120:
@@ -123,30 +123,3 @@ class CentralHeatingSys:
             for child in self.listErrantNodes:
                 lister.append(child.getID())
             print(lister)
-
-start = time.time()
-threshold = 100
-a = HVAC(1,threshold,start)
-b = HVAC(2,threshold,start)
-c = HVAC(3,threshold,start)
-d = HVAC(4,threshold,start)
-ab = EdgeServer(5,[a,b])
-cd = EdgeServer(6,[c,d])
-abcd = CentralHeatingSys(7,[ab,cd])
-
-# Check for proper connections.
-#x = abcd.children
-#for element in x:
-#    print(element.getID())
-#x = ab.children
-#for element in x:
-#    print(element.getID())
-#x = cd.children
-#for element in x:
-#    print(element.getID())
-listofnodes = [a,b,c,d]
-i= 1
-for node in listofnodes:
-    print("starting thread " + str(i))
-    threading.Thread(target = node.run).start()
-    i = i+1
