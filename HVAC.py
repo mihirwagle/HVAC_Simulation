@@ -11,7 +11,8 @@ import time
 import threading
 
 class HVAC:
-    def __init__(self, idd, threshold):
+    def __init__(self, idd, threshold,start):
+        self.start = start
         self.idd = idd
         self.temp = random.randrange(90.0,110.0)
         self.threshold = threshold
@@ -24,12 +25,12 @@ class HVAC:
             self.flag = 1
         else:
             self.flag = 0
-        while True:
+        while True and time.time()< start + 100:
             time.sleep(0.1)
             self.temp += random.randrange(-1.0,1.0)
             if self.temp < 80 or self.temp > 120:
                 self.temp = random.randrange(90.0,110.0)
-            print(str(self.getID()) + " : " + str(self.temp))
+            #print(str(self.getID()) + " : " + str(self.temp))
             if self.flag == 0:
                 if self.temp >= self.threshold:
                     # logic for update with locking
@@ -107,21 +108,28 @@ class CentralHeatingSys:
         self.listErrantNodes.add(node)
         if len(self.listErrantNodes) == 0:
             print("")
-        for node in self.listErrantNodes:
-            print(node.getID())
+        else:
+            lister = list()
+            for child in self.listErrantNodes:
+                lister.append(child.getID())
+            print(lister)
     
     def removeErrant(self, node):
         self.listErrantNodes.discard(node)
         if len(self.listErrantNodes) == 0:
             print("")
-        for node in self.listErrantNodes:
-            print(node.getID())
+        else:
+            lister = list()
+            for child in self.listErrantNodes:
+                lister.append(child.getID())
+            print(lister)
 
+start = time.time()
 threshold = 100
-a = HVAC(1,100)
-b = HVAC(2,100)
-c = HVAC(3,100)
-d = HVAC(4,100)
+a = HVAC(1,threshold,start)
+b = HVAC(2,threshold,start)
+c = HVAC(3,threshold,start)
+d = HVAC(4,threshold,start)
 ab = EdgeServer(5,[a,b])
 cd = EdgeServer(6,[c,d])
 abcd = CentralHeatingSys(7,[ab,cd])
@@ -136,17 +144,9 @@ abcd = CentralHeatingSys(7,[ab,cd])
 #x = cd.children
 #for element in x:
 #    print(element.getID())
-
-t1 = threading.Thread(target = a.run()).start()
-t1.daemon = True
-t2 = threading.Thread(target = b.run()).start()
-t2.daemon = True
-t3 = threading.Thread(target = c.run()).start()
-t3.daemon = True
-t4 = threading.Thread(target = d.run()).start()
-t4.daemon = True
-
-#t1.start()
-#t2.start()
-#t3.start()
-#t4.start()
+listofnodes = [a,b,c,d]
+i= 1
+for node in listofnodes:
+    print("starting thread " + str(i))
+    threading.Thread(target = node.run).start()
+    i = i+1
